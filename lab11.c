@@ -1,17 +1,18 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <pthread.h>
+#include <windows.h>
 #include <time.h>
 
 float globalSum=0.0;
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+HANDLE mutex;
 
-void* threadCode(void *argument)
+//worker thread
+DWORD WINAPI threadCode(LPVOID *argument)
 {
   float threadSum=0;
   float *array=(float *)argument;
   int arraySize=array[0];
-  pthread_t currentThreadID = pthread_self();
+  DWORD WINAPI currentThreadID = GetCurrentThreadId();
 
   printf("Thread #%ld arraySize=%d\n",currentThreadID,arraySize);
   for(int i=1;i<arraySize+1;i++)
@@ -19,9 +20,9 @@ void* threadCode(void *argument)
   printf("Thread #%ld threadSum=%f\n",currentThreadID,threadSum);
 
   //critical section - updating global variable
-  pthread_mutex_lock(&mutex);
+  WaitForSingleObject(mutex,INFINITE);
   globalSum+=threadSum;
-  pthread_mutex_unlock(&mutex);
+  ReleaseMutex(mutex);
 
   return 0;
 }
@@ -81,18 +82,27 @@ int main(int argc, char *argv[]){
     dividedArray[threads-1][j]=data[i];
 
 
-pthread_t *threadIDs=malloc(sizeof(pthread_t)*threads);
+DWORD *threadIDs=malloc(sizeof(DWORD)*threads);
+HANDLE *threadHandles=malloc(sizeof(HANDLE)*threads);
+HANDLE mutex = CreateMutex(NULL,FALSE,NULL);
+                        //security attributes for mutex; if NULL - default values
+                        //!=0 - create and make busy; =0 - only create
+                        //mutex's name; if NULL - anonymous mutex
 clock_t start=clock();
 //creating threads
 for(int i=0;i<threads;i++)
-  pthread_create(threadIDs+i,NULL,threadCode,dividedArray[i]);
+  threadHandles[i]=CreateThread(NULL,0,(LPTHREAD_START_ROUTINE) threadCode,dividedArray[i],0,threadIDs+i);
 
 //waiting for all threads to finish
 for(int i=0;i<threads;i++)
-  pthread_join(threadIDs[i],NULL);
+{
+  WaitForSingleObject(threadHandles[i],INFINITE);
+  CloseHandle(threadHandles[i]);
+}
 clock_t stop=clock();
+CloseHandle(mutex);
 
-printf("w/Threads: globalSum=%f, time=%fs\n",globalSum,(stop-start)/(float)CLOCKS_PER_SEC);
+printf("w /Threads: globalSum=%f, time=%fs\n",globalSum,(stop-start)/(float)CLOCKS_PER_SEC);
 
 //calculating sum without threads
 globalSum=0.0;
@@ -108,5 +118,6 @@ printf("wo/Threads: globalSum=%f, time=%fs\n",globalSum,(stop-start)/(float)CLOC
     free(dividedArray[i]);
   free(dividedArray);
   free(threadIDs);
+  free(threadHandles);
   return 0;
 }
