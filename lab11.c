@@ -7,7 +7,7 @@ float globalSum=0.0;
 HANDLE mutex;
 
 //worker thread
-DWORD WINAPI threadCode(LPVOID *argument)
+DWORD WINAPI threadCode(LPVOID argument)
 {
   float threadSum=0;
   float *array=(float *)argument;
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]){
     dividedArray[threads-1][j]=data[i];
 
 
-DWORD *threadIDs=malloc(sizeof(DWORD)*threads);
+//DWORD *threadIDs=malloc(sizeof(DWORD)*threads);
 HANDLE *threadHandles=malloc(sizeof(HANDLE)*threads);
 HANDLE mutex = CreateMutex(NULL,FALSE,NULL);
                         //security attributes for mutex; if NULL - default values
@@ -91,7 +91,7 @@ HANDLE mutex = CreateMutex(NULL,FALSE,NULL);
 clock_t start=clock();
 //creating threads
 for(int i=0;i<threads;i++)
-  threadHandles[i]=CreateThread(NULL,0,(LPTHREAD_START_ROUTINE) threadCode,dividedArray[i],0,threadIDs+i);
+  threadHandles[i]=CreateThread(NULL,0,(LPTHREAD_START_ROUTINE) threadCode,dividedArray[i],0,NULL);//threadIDs+i);
 
 //waiting for all threads to finish
 for(int i=0;i<threads;i++)
@@ -117,7 +117,7 @@ printf("wo/Threads: globalSum=%f, time=%fs\n",globalSum,(stop-start)/(float)CLOC
   for(int i=0;i<threads;i++)
     free(dividedArray[i]);
   free(dividedArray);
-  free(threadIDs);
+  //free(threadIDs);
   free(threadHandles);
   return 0;
 }
