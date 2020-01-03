@@ -32,7 +32,7 @@ int main(int argc, char *argv[]){
     fprintf(stderr, "Too many arguments!\n");
     return 1;
   }
-  if(argc==1)
+  if(argc<3)
   {
     fprintf(stderr,"Too few arguments!\n");
     return 1;
