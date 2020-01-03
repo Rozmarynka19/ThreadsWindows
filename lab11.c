@@ -92,6 +92,12 @@ clock_t start=clock();
 //creating threads
 for(int i=0;i<threads;i++)
   threadHandles[i]=CreateThread(NULL,0,(LPTHREAD_START_ROUTINE) threadCode,dividedArray[i],0,NULL);//threadIDs+i);
+                    //security attributes for the new thread; if NULL - default values
+                    //stack size for the new thread; if =0 - default size
+                    //pointer to thread function; it's important to be LPTHREAD_START_ROUTINE type
+                    //pointer to thread function's arguments
+                    //bit mask concerning creation options for the new thread; if =0 - default values
+                    //pointer to variable which will store new thread's ID
 
 //waiting for all threads to finish
 for(int i=0;i<threads;i++)
